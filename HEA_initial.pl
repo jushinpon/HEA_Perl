@@ -6,10 +6,10 @@ use HEA;
 # Initial setting
 my @myelement = ("Al","Mo","Nb","Ta","Ti","Zr");
 my @assignfraction = map {$_ = 1;} 0..$#myelement;# assigned fractions for each element
-my $assignfraction = "yes";# use assign fraction
+my $assignfraction = "no";# use assign fraction
 my $genNo = 100;# the total structures you want to generate 
 $genNo = 1 if ($assignfraction eq "yes");# only one struture for assigned fraction
-my $foldername = "original"; #folder to keep all generated files
+my $foldername = "HEA_original"; #folder to keep all generated files
 `rm -rf $foldername`; # remove old folder first
 `mkdir $foldername`; # create a new folder
 my $lmp_data = "atomsk.lmp";# atomsk output file for lmp data file
@@ -38,7 +38,7 @@ my $eleNo = @myelement;# the element types in the system you want
 
 for (reverse 1..@myelement){# for lammps type ID starting from 1
 	my $ele = $myelement[$_ - 1];# for Perl array ID starting from 0
-	system("sed -i '/Masses/a mass $_ ${$myelement{$ele}}[2]' $lmp_data");# append something after the line with the key word
+	system("sed -i '/Masses/a $_ ${$myelement{$ele}}[2]' $lmp_data");# append something after the line with the key word
 }
 `sed -i '/Masses/G' $lmp_data`;# insert newline after the keyword
 `sed -i 's/Atoms/\\n&/' $lmp_data`;# insert newline before the matched keyword (& or \0) 
