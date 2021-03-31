@@ -1,0 +1,32 @@
+units metal 
+dimension 3 
+boundary p p p 
+atom_style atomic 
+atom_modify map array
+
+variable den_out equal 8.211
+variable beg index 1 85 168 251 335 418
+variable end index 84 167 250 334 417 500
+variable atomtype index 1 2 3 4 5 6
+
+read_data ./swap/INI_00000.data
+
+label set_types
+set atom ${beg}*${end} type ${atomtype} 
+next beg
+next end
+next atomtype
+jump SELF set_types
+
+pair_style none
+
+variable den_in equal density
+variable den_ratio equal ${den_in}/${den_out}
+variable den_scale equal ${den_ratio}^(1.0/3.0)
+
+#print $(density)
+#print ${den_scale}
+
+change_box all x scale ${den_scale} y scale ${den_scale} z scale ${den_scale} remap
+write_data AlMoNbTaTiZr.data
+#print $(density)
