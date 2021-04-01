@@ -1,0 +1,54 @@
+# ---------- Initialize Simulation --------------------- 
+clear 
+units metal 
+dimension 3 
+boundary p p p 
+atom_style atomic 
+atom_modify map array
+
+read_data ../original/out-Al17Mo17Nb17Ta17Ti17Zr17.data
+
+# ---------- Define Interatomic Potential --------------------- 
+pair_style meam/c
+pair_coeff * * ../ref.lib Al0 Mo0 Nb0 Ta0 Ti0 Zr0 ../Bestfitted.meam Al0 Mo0 Nb0 Ta0 Ti0 Zr0
+neighbor 1.0 bin 
+neigh_modify delay 10 check yes
+
+
+thermo 1 
+thermo_style custom step pe  
+fix 114 all atom/swap 1 1000 6483 300.0 ke no types 5 6
+fix 113 all atom/swap 1 1000 8079 300.0 ke no types 4 6
+fix 112 all atom/swap 1 1000 5754 300.0 ke no types 4 5
+fix 111 all atom/swap 1 1000 8019 300.0 ke no types 3 6
+fix 110 all atom/swap 1 1000 5373 300.0 ke no types 3 5
+fix 109 all atom/swap 1 1000 9604 300.0 ke no types 3 4
+fix 108 all atom/swap 1 1000 8788 300.0 ke no types 2 6
+fix 107 all atom/swap 1 1000 150 300.0 ke no types 2 5
+fix 106 all atom/swap 1 1000 6882 300.0 ke no types 2 4
+fix 105 all atom/swap 1 1000 5085 300.0 ke no types 2 3
+fix 104 all atom/swap 1 1000 5159 300.0 ke no types 1 6
+fix 103 all atom/swap 1 1000 7173 300.0 ke no types 1 5
+fix 102 all atom/swap 1 1000 3760 300.0 ke no types 1 4
+fix 101 all atom/swap 1 1000 168 300.0 ke no types 1 3
+fix 100 all atom/swap 1 1000 1989 300.0 ke no types 1 2
+
+run 50
+unfix 114
+unfix 113
+unfix 112
+unfix 111
+unfix 110
+unfix 109
+unfix 108
+unfix 107
+unfix 106
+unfix 105
+unfix 104
+unfix 103
+unfix 102
+unfix 101
+unfix 100
+
+write_data swap-Al17Mo17Nb17Ta17Ti17Zr17.data
+ 
