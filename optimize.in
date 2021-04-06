@@ -1,0 +1,26 @@
+log none
+# ---------- Initialize Simulation --------------------- 
+clear 
+units metal 
+dimension 3 
+boundary p p p 
+atom_style atomic 
+atom_modify map array
+
+read_data ../initial-swap/out-Al32Mo02Nb20Ta16Ti24Zr09.data
+
+# ---------- Define Interatomic Potential --------------------- 
+pair_style meam/c
+pair_coeff * * ../ref.lib Al Mo Nb Ta Ti Zr ../Bestfitted.meam Al Mo Nb Ta Ti Zr
+neighbor 1.0 bin 
+neigh_modify delay 10 check yes
+
+thermo 100 
+thermo_style custom step pe pxx pyy pzz press
+ 
+fix 1 all box/relax aniso 0.0
+min_style cg 
+minimize 0.0 0.0 5000 10000
+unfix 1
+write_data out-Al32Mo02Nb20Ta16Ti24Zr09.data
+ 

@@ -10,16 +10,15 @@ use Cwd; #Find Current Path
 my $slurm = "yes"; # use slurm or not
 my $slurmbatch = "slurm.sh"; # slurm batch template
 my $lmp_path = "/opt/lammps-mpich-3.4.1/lmp_20210329";
-my $lmp_script = "swap.in";# lmp script, you may use different one for your purpose
-my $swaptime = 200;# swap time for each run
+my $lmp_script = "optimize.in";# lmp script, you may use different one for your purpose
+my $optstep1 = 5000;# swap time for each run
+my $optstep2 = 10000;# swap time for each run
+my $minimize = "minimize 0.0 0.0 $optstep1 $optstep2";
 my $currentPath = getcwd(); #get perl code path
-my $eleNo = 6; #total element types
-my $pair0 = "pair_coeff * * ../ref.lib Al0 Mo0 Nb0 Ta0 Ti0 Zr0 ../Bestfitted.meam Al0 Mo0 Nb0 Ta0 Ti0 Zr0";#for swap
 my $pair_coeff = "pair_coeff * * ../ref.lib Al Mo Nb Ta Ti Zr ../Bestfitted.meam Al Mo Nb Ta Ti Zr";
 # Initial setting
-my $folder2read = "initial"; #folder to read required files
-my $folder2write = "$folder2read-swap"; #folder to write data
-my $prefix2write = "swap"; #prefix of the output file
+my $folder2read = "initial-swap"; #folder to read required files
+my $folder2write = "$folder2read-optimize"; #folder to write data
 `rm -rf $folder2write`; # remove old folder first
 `mkdir $folder2write`; # create a new folder
 
@@ -31,19 +30,8 @@ chdir("$currentPath");
 
 #`sed -i '/#SBATCH.*--job-name/d' $currentPath/$slurmbatch`;
 `sed -i '/pair_coeff/d' $currentPath/$lmp_script`;
-`sed -i '/pair_style/a $pair0' $currentPath/$lmp_script`;
-`sed -i '/.*atom\\/swap.*/d' $currentPath/$lmp_script`;#remove all first
-`sed -i '/unfix.*/d' $currentPath/$lmp_script`;#remove all first
-my $fixID = 100;
-for my $id1 (1..$eleNo-1){
-	for my $id2 ($id1+1..$eleNo){
-		my $swaprand = POSIX::ceil(10000*rand());
-		my $temp = "fix $fixID all atom\/swap 1 $swaptime $swaprand 300.0 ke no types $id1 $id2";
-	    `sed -i '/thermo_style/a $temp' $currentPath/$lmp_script`;
-	    `sed -i '/run.*/a unfix $fixID' $currentPath/$lmp_script`;
-	    $fixID++;
-	}	
-}
+`sed -i '/pair_style/a $pair_coeff' $currentPath/$lmp_script`;
+`sed -i 's/.*minimize.*/$minimize/' $currentPath/$lmp_script`;
 
 ## modify read_data and write_data according to the file path 
 

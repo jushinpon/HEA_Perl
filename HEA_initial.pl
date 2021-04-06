@@ -3,21 +3,27 @@ use warnings;
 use POSIX;
 use lib '.';
 use HEA;
+use Cwd; #Find Current Path
+
+my $currentPath = getcwd(); #get perl code path
+
 # Initial setting
+my $slurmbatch = "slurm.sh"; # slurm batch template
+my $lmp_path = "/opt/lammps-mpich-3.4.1/lmp_20210329";
+
 my @myelement = ("Al","Mo","Nb","Ta","Ti","Zr");
 my @assignfraction = map {$_ = 1;} 0..$#myelement;# assigned fractions for each element
 my $assignfraction = "no";# use assign fraction
-my $genNo = 100;# the total structures you want to generate 
+my $genNo = 30;# the total structures with random fractions you want to generate 
 $genNo = 1 if ($assignfraction eq "yes");# only one struture for assigned fraction
-my $foldername = "HEA_original"; #folder to keep all generated files
+my $foldername = "initial"; #folder to keep all generated files
 `rm -rf $foldername`; # remove old folder first
 `mkdir $foldername`; # create a new folder
+my $lmp_in = "density.in";
 my $lmp_data = "atomsk.lmp";# atomsk output file for lmp data file
-my $lmp_in = "density.in";# lmp script, you may use different one for your purpose
-my $dup = "5 5 5";# replicate in x, y, and z dimensions
-my $crystal = "fcc 3.597 Cu";# crystal information
+my $crystal = "bcc 3.597 Ta";# crystal information
 my $orient = "[100] [010] [001]";# crystal axis vectors
-my $lmp_path = "/opt/lammps-mpich-3.4.1/lmp_20210329 ";
+my $dup = "5 5 5";
 # end of initial setting
 
 my %myelement;# for keep an array with all element information
@@ -27,7 +33,7 @@ for (@myelement){
      @{$myelement{$_}} = &HEA::eleObj("$_");
     print "element: $_, properties: @{$myelement{$_}}\n";    
 }
-sleep(1);
+
 ## Begin modify lmp data file by sed
 unlink "./$lmp_data";# remove old atomsk data file
 #system("atomsk --create fcc 3.597 Cu orient [110] [-110] [001] -dup 3 3 3 template.lmp");
@@ -95,11 +101,29 @@ for (1..$genNo){
 	}
 	`cp $lmp_in $prefix.in`;
 	`cp $lmp_data in-$prefix.data`;
+	
 	my $read_data = "read_data in-$prefix.data";
 	`sed -i 's:.*read_data.*:$read_data:' $prefix.in`;# modify atom type numbers for the system you want
 	my $write_data = "write_data out-$prefix.data";
 	`sed -i 's:.*write_data.*:$write_data:' $prefix.in`;# modify atom type numbers for the system you want
     `sed -i '/log/d' $prefix.in`;
-    `sed -i '1i log $prefix.log' $prefix.in`;
+    `sed -i '1i log none' $prefix.in`; # no log from lammps
     `mv $prefix.in in-$prefix.data ./$foldername/`;
+    
+### making slurm batch files
+    `sed -i '/#SBATCH.*--job-name/d' $slurmbatch`;
+	`sed -i '/#sed_anchor01/a #SBATCH --job-name=$prefix' $slurmbatch`;
+	
+	`sed -i '/#SBATCH.*--output/d' $slurmbatch`;
+	`sed -i '/#sed_anchor01/a #SBATCH --output=$prefix.sout' $slurmbatch`;
+	
+	`sed -i '/mpiexec.*/d' $slurmbatch`;
+	`sed -i '/#sed_anchor02/a mpiexec $lmp_path -l none -in $prefix.in' $slurmbatch`;
+
+	`cp $slurmbatch $prefix.sh`;
+    `mv $prefix.sh ./$foldername/`;
+	
+	chdir("$currentPath/$foldername");	
+	system("sbatch $prefix.sh");
+	chdir("$currentPath");
 }

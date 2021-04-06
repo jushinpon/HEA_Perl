@@ -1,15 +1,16 @@
+log none
 units metal 
 dimension 3 
 boundary p p p 
 atom_style atomic 
 atom_modify map array
 
-variable den_out equal 9.69541608457017
-variable beg index 1 30 146 164 312 455
-variable end index 29 145 163 311 454 500
+variable den_out equal 8.91405479648396
+variable beg index 1 36 100 152 190 190
+variable end index 35 99 151 189 189 250
 variable atomtype index 1 2 3 4 5 6
 
-read_data ./swap/INI_00000.data
+read_data ../atomsk.lmp
 
 label set_types
 set atom ${beg}*${end} type ${atomtype} 
@@ -28,5 +29,5 @@ variable den_scale equal ${den_ratio}^(1.0/3.0)
 #print ${den_scale}
 
 change_box all x scale ${den_scale} y scale ${den_scale} z scale ${den_scale} remap
-write_data AlMoNbTaTiZr.data
+write_data Al14Mo12Nb22Ta25Ti22Zr07.data
 #print $(density)
